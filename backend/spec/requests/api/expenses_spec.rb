@@ -23,6 +23,17 @@ RSpec.describe "Api::Expenses", type: :request do
       expect(json.first["id"]).to eq(expense2.id)
       expect(json.last["id"]).to eq(expense1.id)
     end
+
+    it "returns expenses in descending order by expense date, regardless of creation order" do
+      older_expense = Expense.create!(description: "Rent", amount: 800.00, category: food_category, date: Date.today - 5)
+      newer_expense = Expense.create!(description: "Groceries", amount: 60.00, category: food_category, date: Date.today - 1)
+
+      get "/api/expenses"
+
+      json = JSON.parse(response.body)
+      ids = json.map { |expense| expense["id"] }
+      expect(ids.index(newer_expense.id)).to be < ids.index(older_expense.id)
+    end
   end
 
   describe "POST /api/expenses" do
